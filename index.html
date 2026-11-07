@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ayride</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap">
+  <script type="module" crossorigin src="/ayride/assets/index-BQ9M0Q1x.js"></script>
+  <link rel="stylesheet" crossorigin href="/ayride/assets/index-BU7Dl4tz.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="c" aria-label="3D view of the ride"></canvas>
+  <div id="vig"></div>
+
+  <div id="top">
+    <div id="row1">
+      <div class="panel" id="controls">
+        <span id="brand">Ayride</span>
+        <button id="fps" title="Frames per second: click for the timing of each part" aria-expanded="false" aria-controls="perfPanel"></button>
+        <div class="seg-group" role="group" aria-label="Camera">
+          <button data-cam="chase" aria-pressed="true">Chase</button>
+          <button data-cam="drone" aria-pressed="false">Drone</button>
+          <button data-cam="side" aria-pressed="false">Side</button>
+        </div>
+        <button class="btn" id="mapToggle" aria-expanded="false" aria-controls="mapPanel" title="Course map: click the route to teleport">Map</button>
+        <button class="btn" id="photoBtn" title="Take a photo of the ride (P)">Photo</button>
+      </div>
+      <div class="panel" id="connectBox">
+        <span id="rec" hidden title="Recording">● REC</span>
+        <span id="trainerMode"></span>
+        <button class="chip" id="rideDevices" title="Pair the trainer and heart rate monitor"><i class="dot" id="rideTrainerDot"></i>Trainer<i class="dot" id="rideHrmDot"></i>HR</button>
+        <button class="btn" id="pauseBtn" title="Pause, settings, save or exit (Esc)">Menu <kbd>Esc</kbd></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="perfPanel" class="panel" hidden aria-live="off"></div>
+  <div id="mapPanel" class="panel" hidden>
+    <canvas id="mapCanvas" aria-label="Course map"></canvas>
+    <div class="map-foot"><span class="map-hint">Scroll to zoom · drag to pan · double-click to fit · click the route to teleport</span><button class="btn" id="mapSize" aria-pressed="false" title="Enlarge the map">⤢</button></div>
+  </div>
+
+  <div id="toast" class="panel"></div>
+  <div id="pedalHint" class="panel" hidden></div>
+  <div id="loading" class="panel" hidden>Loading the water…</div>
+
+  <aside id="splits" class="panel" aria-label="Workout intervals">
+    <div id="splitHead"><span id="workoutName">Zone 2</span><span id="workoutTime">0:00 / 0:00</span></div>
+    <div id="strip"><div id="playhead"></div></div>
+    <div id="difficulty">
+      <span>Difficulty</span>
+      <button class="btn small" id="easier" title="Easier: target −5 W (− key)" aria-label="Easier">−</button>
+      <output id="diffOut" aria-live="polite">±0 W</output>
+      <button class="btn small" id="harder" title="Harder: target +5 W (+ key)" aria-label="Harder">+</button>
+    </div>
+    <ol id="splitList"></ol>
+  </aside>
+
+  <aside id="garmin" aria-label="Ride data">
+    <div class="screen">
+      <div class="gf wide power" id="gPowerField">
+        <span class="l">Power 3s <em id="gTarget"></em></span>
+        <span class="v" id="gPower">0<small>W</small></span>
+        <div id="zone"><div id="zoneBand"></div><div id="zoneNeedle"></div></div>
+        <span class="state" id="gState"></span>
+      </div>
+      <div class="gf wide climb" id="gClimb" style="display:none">
+        <span class="l"><span id="gClimbTitle">Climb</span><em id="gClimbAvg"></em></span>
+        <canvas id="gClimbCanvas"></canvas>
+        <div class="climb-stats"><span id="gClimbToGo"></span><span id="gClimbGain"></span><span id="gClimbNext"></span></div>
+      </div>
+      <div class="gf"><span class="l">Cadence</span><span class="v" id="gCad">0<small>rpm</small></span></div>
+      <div class="gf"><span class="l">Speed</span><span class="v" id="gSpeed">0.0<small>km/h</small></span></div>
+      <div class="gf"><span class="l">Interval left</span><span class="v" id="gLapTime">0:00</span></div>
+      <div class="gf"><span class="l">Lap avg</span><span class="v" id="gLapAvg">0<small>W</small></span></div>
+      <div class="gf"><span class="l">Heart rate</span><span class="v" id="gHr">--<small>bpm</small></span></div>
+      <div class="gf"><span class="l">Avg power</span><span class="v" id="gAvg">0<small>W</small></span></div>
+      <div class="gf"><span class="l">Elapsed</span><span class="v" id="gTime">0:00</span></div>
+      <div class="gf"><span class="l">Distance</span><span class="v" id="gDist">0.00<small>km</small></span></div>
+      <div class="gf"><span class="l">In band</span><span class="v" id="gBand">0<small>%</small></span></div>
+      <div class="gf"><span class="l" id="gFishLabel">Fish</span><span class="v" id="gFish">0</span></div>
+    </div>
+  </aside>
+  <div id="attrib"></div>
+
+  <section id="menu" aria-label="Main menu" hidden>
+    <div id="menuBg"></div>
+    <header class="menu-head">
+      <div>
+        <h1 class="brand-big">Ayride</h1>
+        <p class="tagline">Pedal the Léman and real Swiss roads on your smart trainer.</p>
+      </div>
+      <div class="menu-tools">
+        <button class="chip big" id="menuDevices"><i class="dot" id="menuTrainerDot"></i><span id="menuTrainerText">Trainer</span><i class="dot" id="menuHrmDot"></i><span id="menuHrmText">Heart rate</span></button>
+        <button class="btn" id="menuSettings">Settings</button>
+      </div>
+    </header>
+    <ol class="steps" aria-label="Steps">
+      <li id="stepWorkout" class="on"><b>1</b> Workout</li>
+      <li id="stepCourse"><b>2</b> Course</li>
+      <li id="stepGo"><b>3</b> Ride</li>
+    </ol>
+    <div class="menu-body">
+      <div class="menu-page" id="pageWorkout">
+        <div class="page-head">
+          <h2>What are you riding today?</h2>
+          <label class="field">FTP <input id="ftp" type="number" min="80" max="600" value="250"> W</label>
+        </div>
+        <div class="cards" id="workoutCards"></div>
+        <input id="zwoFile" type="file" accept=".zwo,.xml" hidden>
+      </div>
+      <div class="menu-page" id="pageCourse" hidden>
+        <div class="page-head">
+          <h2>Where to ride <span id="chosenWorkout"></span>?</h2>
+          <button class="btn ghost" id="backToWorkout">← Workouts</button>
+        </div>
+        <div class="cards" id="courseCards"></div>
+        <input id="gpxFile" type="file" accept=".gpx,application/gpx+xml" hidden>
+      </div>
+    </div>
+    <footer class="menu-foot" id="menuFoot" hidden>
+      <span id="rideSummary"></span>
+      <button class="btn primary" id="startRide" disabled>Start ride</button>
+    </footer>
+  </section>
+
+  <div class="modal-wrap" id="pause" hidden>
+    <div class="panel modal narrow" role="dialog" aria-labelledby="pauseTitle">
+      <h2 id="pauseTitle">Paused</h2>
+      <p class="sub" id="pauseStats"></p>
+      <div class="stack">
+        <button class="btn primary" id="resume">Resume <kbd>Esc</kbd></button>
+        <button class="btn" id="pauseDevices">Pair devices</button>
+        <button class="btn" id="pauseSettings">Settings</button>
+        <button class="btn" id="saveExit">Save and exit</button>
+        <button class="btn danger" id="discardExit">Exit without saving</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="devices" hidden>
+    <div class="panel modal" role="dialog" aria-labelledby="devicesTitle">
+      <div class="modal-head"><h2 id="devicesTitle">Devices</h2><button class="btn" data-close>Done</button></div>
+      <div class="device" id="trainerCard">
+        <div class="dev-icon" aria-hidden="true">⚙</div>
+        <div class="dev-main">
+          <b>Smart trainer</b>
+          <span class="dev-status" id="trainerStatus">Not paired</span>
+          <span class="dev-live" id="trainerLive"></span>
+        </div>
+        <button class="btn" id="connect">Pair</button>
+      </div>
+      <label class="set-row">Trainer control
+        <select id="controlPref" class="sel" aria-label="Trainer control" title="ERG everywhere holds every block at its target. Mixed rides Zone 2 in SIM with the grade.">
+          <option value="erg">ERG everywhere</option>
+          <option value="mixed">Mixed (SIM in Zone 2)</option>
+        </select>
+      </label>
+      <label class="set-row">Trainer difficulty
+        <select id="simScale" class="sel" aria-label="Trainer difficulty" title="Share of the road grade the trainer feels in SIM. Lower lets you ride a bigger gear uphill, so the flywheel spins faster and carries you through the dead spot of each pedal stroke.">
+          <option value="1">100 %</option>
+          <option value="0.75">75 %</option>
+          <option value="0.5">50 %</option>
+          <option value="0.25">25 %</option>
+        </select>
+      </label>
+      <div class="device" id="hrmCard">
+        <div class="dev-icon heart" aria-hidden="true">♥</div>
+        <div class="dev-main">
+          <b>Heart rate monitor</b>
+          <span class="dev-status" id="hrmStatus">Not paired</span>
+          <span class="dev-live" id="hrmLive"></span>
+        </div>
+        <button class="btn" id="connectHrm">Pair</button>
+      </div>
+      <div class="device" id="pedalsCard">
+        <div class="dev-icon" aria-hidden="true">⟳</div>
+        <div class="dev-main">
+          <b>Power pedals</b>
+          <span class="dev-status" id="pedalsStatus">Not paired</span>
+          <span class="dev-live" id="pedalsLive"></span>
+        </div>
+        <button class="btn" id="connectPedals">Pair</button>
+      </div>
+      <p class="set-note">Chrome or Edge, with Bluetooth on. Disconnect the trainer from Zwift or its phone app first. Paired power pedals give the cadence; the trainer keeps measuring power.</p>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="settings" hidden>
+    <div class="panel modal" role="dialog" aria-labelledby="settingsTitle">
+      <div class="modal-head"><h2 id="settingsTitle">Settings</h2><button class="btn" data-close>Done</button></div>
+      <div class="set-grid">
+        <section>
+          <h3>Ride</h3>
+          <label class="set-row">FTP <span><input id="ftpSettings" class="num" type="number" min="80" max="600" value="250"> W</span></label>
+          <label class="set-row" id="endField" hidden>At the end of the road <select id="routeEnd" class="sel" aria-label="At the end of the route">
+            <option value="finish">Finish</option>
+            <option value="uturn">U-turn</option>
+          </select></label>
+          <label class="set-row">Look <select id="lookStyle" class="sel"><option value="windward">Illustrated</option><option value="natural">Natural</option></select></label>
+          <label class="set-row">Resolution <select id="resPref" class="sel" title="Lower draws fewer pixels: a faster frame, a softer picture"><option value="1">Full</option><option value="0.75">75 %</option><option value="0.5">50 %</option></select></label>
+          <label class="set-row" for="hourPref">Time of day <output id="hourOut"></output></label>
+          <div class="set-row"><input type="range" id="hourPref" min="6" max="21" step="0.25" aria-label="Time of day"><button class="btn small" id="hourAuto" title="Back to the workout’s golden hour">Golden hour</button></div>
+          <label class="set-row">Ride photos <select id="photoPref" class="sel"><option value="auto">Every few minutes</option><option value="manual">Only when I press P</option></select></label>
+        </section>
+        <section>
+          <div class="wp-head"><h3>Strava</h3><button class="btn small" id="stravaConnect">Connect</button></div>
+          <p class="set-note" id="stravaStatus">Not connected</p>
+          <label class="set-row">Client ID <input id="stravaId" class="txt" inputmode="numeric" autocomplete="off" spellcheck="false"></label>
+          <label class="set-row">Client secret <input id="stravaSecret" class="txt" type="password" autocomplete="off" spellcheck="false"></label>
+          <p class="set-note">From your app at strava.com/settings/api (Authorization Callback Domain: <b id="stravaDomain"></b>). They stay in this browser. Finished rides upload as Virtual Rides by themselves.</p>
+        </section>
+        <section>
+          <div class="wp-head"><h3>Rider</h3></div>
+          <div class="set-row"><span>Body</span><div class="seg-group" role="group" aria-label="Body" id="riderBody"></div></div>
+          <p class="set-note">Quaternius Universal Base Characters (CC0)</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="builder" hidden>
+    <div class="panel modal wide builder" role="dialog" aria-labelledby="builderTitle">
+      <div class="modal-head"><h2 id="builderTitle">Build a workout</h2><button class="btn" data-close>Cancel</button></div>
+      <label class="set-row b-name">Name <input id="bName" class="txt" maxlength="60" autocomplete="off"></label>
+      <div class="b-palette" id="bPalette">
+        <span class="set-note">Drag a block onto the timeline, or click to add it at the end:</span>
+        <button class="chip b-chip z2" data-type="warmup">Warm-up</button>
+        <button class="chip b-chip under" data-type="constant">Constant</button>
+        <button class="chip b-chip z2" data-type="cooldown">Cool-down</button>
+      </div>
+      <div class="b-track" id="bTrack">
+        <div class="b-grid" aria-hidden="true"><i style="bottom:31.25%"><b>50%</b></i><i style="bottom:46.875%"><b>75%</b></i><i class="ftp" style="bottom:62.5%"><b>FTP</b></i><i style="bottom:78.125%"><b>125%</b></i></div>
+        <div class="b-lane" id="bLane"></div>
+        <div class="b-marker" id="bMarker" hidden></div>
+        <p class="b-empty set-note" id="bEmpty" hidden>Drag a block here</p>
+      </div>
+      <div class="b-foot"><span id="bTotal"></span><span class="set-note">Drag a block to move it, its right edge to stretch it, the top of a constant block to change its power.</span></div>
+      <div class="b-edit" id="bEdit"></div>
+      <div class="row"><span class="grow"></span><button class="btn primary" id="bSave">Save workout</button></div>
+    </div>
+  </div>
+  <div class="b-ghost chip" id="bGhost" hidden></div>
+
+  <div class="modal-wrap" id="saveRide" hidden>
+    <div class="panel modal wide" role="dialog" aria-labelledby="saveTitle">
+      <div class="modal-head"><h2 id="saveTitle">Save your ride</h2></div>
+      <p class="sub" id="saveText"></p>
+      <dl class="stats" id="saveStats"></dl>
+      <div class="photos-head"><h3>Photos</h3><span class="set-note" id="photoCount"></span></div>
+      <div class="photos" id="photoStrip"></div>
+      <div class="row">
+        <button class="btn ghost" id="saveBack">Back to the ride</button>
+        <span class="grow"></span>
+        <button class="btn strava" id="stravaUpload" hidden></button>
+        <button class="btn" id="downloadFit" title="The same ride as a FIT file, marked as a virtual ride (Strava: Virtual Ride)">.fit</button>
+        <button class="btn primary" id="downloadTcx">Download .tcx and photos</button>
+        <button class="btn" id="saveDone">Main menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="flash"></div>
+  <div id="msg"><div class="panel" id="msgBox"></div></div>
+</div>
+</body>
+</html>

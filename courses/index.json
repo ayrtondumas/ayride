@@ -1,0 +1,10 @@
+[
+  {"id":"leman","name":"Léman","file":"leman.gpx","water":true},
+  {"id":"lhongrain","name":"L'hongrain","file":"L'hongrain.gpx"},
+  {"id":"lavaux","name":"Lavaux","file":"lavaux.gpx"},
+  {"id":"ironman-thun","name":"IRONMAN Switzerland Thun (2 × 90 km)","file":"IRONMAN Switzerland Thun - Bike Course 180.gpx"},
+  {"id":"lac-noir","name":"Lac Noir","file":"Lac noir.gpx"},
+  {"id":"fribourg-22","name":"Fribourg 22.5 km","file":"CroRapo.gpx"},
+  {"id":"nice-61","name":"Nice 61 km","file":"61 km Nice Ride Route.gpx"},
+  {"id":"grimsel-furka","name":"Meiringen – Grimsel – Furka","file":"Meiringen Grimsel Furka.gpx"}
+]

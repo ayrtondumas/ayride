@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Strava login</title>
+<style>
+  :root{color-scheme:dark}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1320;color:#e8eef5;font:15px/1.4 system-ui,sans-serif}
+</style>
+</head>
+<body>
+<p id="note">Connecting Ayride to Strava…</p>
+<script>
+  const q=new URLSearchParams(location.search);
+  new BroadcastChannel("ayride-strava").postMessage({code:q.get("code"),scope:q.get("scope"),state:q.get("state"),error:q.get("error")});
+  setTimeout(()=>{window.close();document.getElementById("note").textContent="Done. You can close this window and go back to Ayride.";},300);
+</script>
+</body>
+</html>
